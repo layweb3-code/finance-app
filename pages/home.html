@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html class="light" lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>账单首页 - 记账本</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { background-color: #F8FAFC; }
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; }
+        .modal.active { display: flex; }
+        .modal-backdrop { background: rgba(0,0,0,0.5); position: absolute; inset: 0; }
+        .modal-content { position: relative; z-index: 1; background: white; border-radius: 16px 16px 0 0; margin-top: auto; width: 100%; max-height: 85vh; overflow-y: auto; }
+        @media (min-width: 768px) {
+            .modal-content { max-width: 480px; margin: auto; border-radius: 16px; }
+        }
+        .category-item { transition: all 0.15s ease; }
+        .category-item.selected { background: #e5eeff; border-color: #000; }
+        .type-tab.active { background: #000; color: #fff; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "secondary": "#006c49",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-border": "#E2E8F0",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#45464d",
+                        "income-glance": "#D1FAE5",
+                        "expense-glance": "#FFE4E6",
+                        "on-secondary-container": "#00714d",
+                        "on-tertiary-container": "#f23d5c",
+                        "error": "#ba1a1a"
+                    },
+                    fontFamily: {
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-numeric": ["JetBrains Mono"],
+                        "label-sm": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-numeric": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    },
+                    spacing: {
+                        "container-margin": "16px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "32px",
+                        "gutter": "12px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface min-h-screen pb-24">
+    <!-- Top Navigation Bar -->
+    <header class="w-full sticky top-0 z-40 bg-surface">
+        <div class="flex justify-between items-center px-container-margin py-stack-md w-full max-w-[1200px] mx-auto">
+            <div class="flex items-center gap-stack-sm">
+                <span class="material-symbols-outlined text-primary">account_balance_wallet</span>
+                <h1 class="font-headline-md text-headline-md text-primary" id="currentMonth">2024年3月</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openDatePicker()" class="hover:bg-surface-container-low transition-colors p-2 rounded-full">
+                    <span class="material-symbols-outlined text-on-surface-variant">calendar_month</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto px-container-margin space-y-stack-lg">
+        <!-- Summary Dashboard Card -->
+        <section class="mt-stack-md">
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl p-stack-lg shadow-sm">
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- Net Balance -->
+                    <div class="text-center">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">净结余</span>
+                        <p class="font-headline-md text-headline-md text-primary font-label-numeric mt-1" id="balance">¥4,280.00</p>
+                    </div>
+                    <!-- Income -->
+                    <div class="text-center cursor-pointer" onclick="showIncomeDetail()">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">总收入</span>
+                        <p class="font-headline-md text-headline-md text-secondary font-label-numeric mt-1" id="totalIncome">+¥6,120.00</p>
+                    </div>
+                    <!-- Expense -->
+                    <div class="text-center cursor-pointer" onclick="showExpenseDetail()">
+                        <span class="font-label-sm text-label-sm text-on-surface-variant">总支出</span>
+                        <p class="font-headline-md text-headline-md text-on-surface font-label-numeric mt-1" id="totalExpense">-¥1,840.00</p>
+                    </div>
+                </div>
+                <!-- Mini Progress Bar for Budget -->
+                <div class="mt-stack-lg w-full h-1 bg-surface-container rounded-full overflow-hidden">
+                    <div class="h-full bg-primary" style="width: 30%"></div>
+                </div>
+                <div class="mt-stack-sm flex justify-between items-center">
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">本月预算进度</span>
+                    <span class="font-label-sm text-label-sm text-primary font-label-numeric">30% (剩余 ¥1,200)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions List -->
+        <section class="space-y-stack-lg" id="transactionsList">
+            <!-- Transactions will be rendered here -->
+        </section>
+    </main>
+
+    <!-- FAB Quick Record -->
+    <button onclick="openAddModal()" class="fixed bottom-24 right-4 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform z-50">
+        <span class="material-symbols-outlined text-[32px]">add</span>
+    </button>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 w-full z-50 bg-surface-container-lowest border-t border-surface-border">
+        <div class="flex justify-around items-center h-16 w-full px-4 max-w-[1200px] mx-auto">
+            <a class="flex flex-col items-center justify-center text-primary font-semibold" href="home.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home_storage</span>
+                <span class="font-label-sm text-label-sm">首页</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="stats.html">
+                <span class="material-symbols-outlined">equalizer</span>
+                <span class="font-label-sm text-label-sm">统计</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="budget.html">
+                <span class="material-symbols-outlined">account_balance</span>
+                <span class="font-label-sm text-label-sm">预算</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="profile.html">
+                <span class="material-symbols-outlined">person</span>
+                <span class="font-label-sm text-label-sm">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Add Transaction Modal -->
+    <div id="addModal" class="modal items-end md:items-center justify-center">
+        <div class="modal-backdrop" onclick="closeAddModal()"></div>
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-headline-md text-headline-md text-primary">记一笔</h2>
+                <button onclick="closeAddModal()" class="p-2 hover:bg-surface-container rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Type Toggle -->
+            <div class="flex gap-2 mb-6 bg-surface-container p-1 rounded-xl">
+                <button onclick="setType('expense')" id="tab-expense" class="type-tab active flex-1 py-2 rounded-lg font-medium text-center transition-colors">支出</button>
+                <button onclick="setType('income')" id="tab-income" class="type-tab flex-1 py-2 rounded-lg font-medium text-center transition-colors">收入</button>
+            </div>
+
+            <!-- Amount Input -->
+            <div class="mb-6">
+                <label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block">金额</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl text-on-surface-variant">¥</span>
+                    <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0"
+                        class="w-full pl-10 pr-4 py-4 text-2xl font-label-numeric border border-surface-border rounded-xl focus:outline-none focus:border-primary">
+                </div>
+            </div>
+
+            <!-- Category Selection -->
+            <div class="mb-6">
+                <label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block">分类</label>
+                <div class="grid grid-cols-5 gap-2" id="categoryGrid">
+                    <!-- Categories will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Note Input -->
+            <div class="mb-6">
+                <label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block">备注</label>
+                <input type="text" id="noteInput" placeholder="添加备注..."
+                    class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary">
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="addTransaction()" class="w-full py-4 bg-primary text-on-primary font-headline-sm text-headline-sm rounded-xl hover:opacity-90 active:scale-[0.98] transition-all">
+                保存
+            </button>
+        </div>
+    </div>
+
+    <!-- Income/Expense Detail Modal -->
+    <div id="detailModal" class="modal items-end md:items-center justify-center">
+        <div class="modal-backdrop" onclick="closeDetailModal()"></div>
+        <div class="modal-content p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-headline-md text-headline-md text-primary" id="detailTitle">收支明细</h2>
+                <button onclick="closeDetailModal()" class="p-2 hover:bg-surface-container rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="detailList" class="space-y-3 max-h-[60vh] overflow-y-auto">
+                <!-- Detail items will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Picker Modal -->
+    <div id="datePickerModal" class="modal items-center justify-center">
+        <div class="modal-backdrop" onclick="closeDatePicker()"></div>
+        <div class="modal-content p-6 max-w-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-headline-md text-headline-md text-primary">选择月份</h2>
+                <button onclick="closeDatePicker()" class="p-2 hover:bg-surface-container rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-3" id="monthGrid">
+                <!-- Months will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        const categories = {
+            expense: [
+                { id: 'food', name: '餐饮', icon: 'restaurant' },
+                { id: 'transport', name: '交通', icon: 'directions_car' },
+                { id: 'shopping', name: '购物', icon: 'shopping_bag' },
+                { id: 'housing', name: '居住', icon: 'house' },
+                { id: 'entertainment', name: '娱乐', icon: 'movie' },
+                { id: 'medical', name: '医疗', icon: 'local_hospital' },
+                { id: 'education', name: '教育', icon: 'school' },
+                { id: 'social', name: '人情', icon: 'card_giftcard' },
+                { id: 'other-expense', name: '其他', icon: 'more_horiz' }
+            ],
+            income: [
+                { id: 'salary', name: '工资', icon: 'payments' },
+                { id: 'parttime', name: '兼职', icon: 'work' },
+                { id: 'investment', name: '理财', icon: 'trending_up' },
+                { id: 'bonus', name: '红包', icon: 'redeem' },
+                { id: 'other-income', name: '其他', icon: 'more_horiz' }
+            ]
+        };
+
+        let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+        let currentType = 'expense';
+        let selectedCategory = null;
+        let selectedMonth = new Date().toISOString().slice(0, 7);
+
+        // Initialize
+        function init() {
+            if (transactions.length === 0) {
+                // Add sample data
+                transactions = [
+                    { id: 1, type: 'expense', amount: 85, categoryId: 'food', note: '晚餐 (Lumina)', date: new Date().toISOString().split('T')[0] },
+                    { id: 2, type: 'expense', amount: 12.5, categoryId: 'transport', note: '城市停车', date: new Date().toISOString().split('T')[0] },
+                    { id: 3, type: 'expense', amount: 45, categoryId: 'shopping', note: '每周采买', date: new Date().toISOString().split('T')[0] },
+                    { id: 4, type: 'income', amount: 3400, categoryId: 'salary', note: '工资发放', date: new Date(Date.now() - 86400000).toISOString().split('T')[0] },
+                    { id: 5, type: 'expense', amount: 15, categoryId: 'entertainment', note: '流媒体订阅', date: new Date(Date.now() - 86400000).toISOString().split('T')[0] },
+                    { id: 6, type: 'expense', amount: 5.5, categoryId: 'food', note: '早间咖啡', date: new Date(Date.now() - 86400000).toISOString().split('T')[0] },
+                    { id: 7, type: 'expense', amount: 210, categoryId: 'housing', note: '水电煤缴费', date: new Date(Date.now() - 172800000).toISOString().split('T')[0] }
+                ];
+                saveTransactions();
+            }
+            renderCategories();
+            renderTransactions();
+            updateSummary();
+            renderMonths();
+        }
+
+        // Save transactions to localStorage
+        function saveTransactions() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // Render categories
+        function renderCategories() {
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = categories[currentType].map(cat => `
+                <button onclick="selectCategory('${cat.id}')" class="category-item flex flex-col items-center gap-1 p-2 rounded-xl border border-transparent hover:bg-surface-container-low">
+                    <span class="material-symbols-outlined text-primary">${cat.icon}</span>
+                    <span class="text-xs">${cat.name}</span>
+                </button>
+            `).join('');
+        }
+
+        // Select category
+        function selectCategory(id) {
+            selectedCategory = id;
+            document.querySelectorAll('.category-item').forEach(item => item.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+        }
+
+        // Set type (expense/income)
+        function setType(type) {
+            currentType = type;
+            document.getElementById('tab-expense').classList.toggle('active', type === 'expense');
+            document.getElementById('tab-income').classList.toggle('active', type === 'income');
+            selectedCategory = null;
+            renderCategories();
+        }
+
+        // Open add modal
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close add modal
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            document.body.style.overflow = '';
+            document.getElementById('amountInput').value = '';
+            document.getElementById('noteInput').value = '';
+            selectedCategory = null;
+            renderCategories();
+        }
+
+        // Add transaction
+        function addTransaction() {
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const note = document.getElementById('noteInput').value;
+
+            if (!amount || amount <= 0) {
+                alert('请输入有效金额');
+                return;
+            }
+            if (!selectedCategory) {
+                alert('请选择分类');
+                return;
+            }
+
+            const transaction = {
+                id: Date.now(),
+                type: currentType,
+                amount: amount,
+                categoryId: selectedCategory,
+                note: note || categories[currentType].find(c => c.id === selectedCategory).name,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            transactions.unshift(transaction);
+            saveTransactions();
+            closeAddModal();
+            renderTransactions();
+            updateSummary();
+        }
+
+        // Delete transaction
+        function deleteTransaction(id) {
+            if (confirm('确定要删除这笔记录吗？')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveTransactions();
+                renderTransactions();
+                updateSummary();
+            }
+        }
+
+        // Render transactions
+        function renderTransactions() {
+            const list = document.getElementById('transactionsList');
+            const grouped = {};
+
+            transactions.forEach(t => {
+                const date = t.date;
+                if (!grouped[date]) grouped[date] = [];
+                grouped[date].push(t);
+            });
+
+            const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+
+            list.innerHTML = sortedDates.map(date => {
+                const dayTransactions = grouped[date];
+                const dayExpense = dayTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+                const dayIncome = dayTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+                const dateLabel = getDateLabel(date);
+
+                return `
+                    <div class="space-y-stack-md">
+                        <div class="flex justify-between items-end border-b border-surface-border pb-stack-sm">
+                            <h2 class="font-headline-sm text-headline-sm text-primary">${dateLabel}</h2>
+                            <span class="font-label-sm text-label-sm ${dayIncome > 0 ? 'text-secondary' : 'text-on-surface-variant'} font-label-numeric">
+                                ${dayIncome > 0 ? '+' + formatCurrency(dayIncome) + ' ' : ''}${dayExpense > 0 ? '-' + formatCurrency(dayExpense) : ''}
+                            </span>
+                        </div>
+                        <div class="space-y-stack-sm">
+                            ${dayTransactions.map(t => {
+                                const cat = categories[t.type].find(c => c.id === t.categoryId);
+                                return `
+                                    <div class="transaction-card bg-surface-container-lowest border border-surface-border p-stack-md rounded-lg flex items-center justify-between transition-all cursor-pointer group">
+                                        <div class="flex items-center gap-stack-md">
+                                            <div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+                                                <span class="material-symbols-outlined text-primary">${cat?.icon || 'more_horiz'}</span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="font-body-lg text-body-lg text-primary">${t.note}</span>
+                                                <span class="font-body-md text-body-md text-on-surface-variant">${cat?.name || '未分类'}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-label-numeric text-body-lg ${t.type === 'income' ? 'text-secondary' : 'text-primary'}">
+                                                ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                                            </span>
+                                            <button onclick="event.stopPropagation(); deleteTransaction(${t.id})" class="opacity-0 group-hover:opacity-100 p-1 hover:bg-surface-container rounded-full transition-opacity">
+                                                <span class="material-symbols-outlined text-on-surface-variant text-lg">delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update summary
+        function updateSummary() {
+            const monthTransactions = transactions.filter(t => t.date.startsWith(selectedMonth));
+            const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+            document.getElementById('balance').textContent = formatCurrency(income - expense);
+            document.getElementById('totalIncome').textContent = '+' + formatCurrency(income);
+            document.getElementById('totalExpense').textContent = '-' + formatCurrency(expense);
+            document.getElementById('currentMonth').textContent = selectedMonth.replace('-', '年') + '月';
+        }
+
+        // Show income detail
+        function showIncomeDetail() {
+            const monthTransactions = transactions.filter(t => t.date.startsWith(selectedMonth) && t.type === 'income');
+            document.getElementById('detailTitle').textContent = '收入明细';
+            renderDetailList(monthTransactions);
+            document.getElementById('detailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Show expense detail
+        function showExpenseDetail() {
+            const monthTransactions = transactions.filter(t => t.date.startsWith(selectedMonth) && t.type === 'expense');
+            document.getElementById('detailTitle').textContent = '支出明细';
+            renderDetailList(monthTransactions);
+            document.getElementById('detailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Render detail list
+        function renderDetailList(items) {
+            const list = document.getElementById('detailList');
+            if (items.length === 0) {
+                list.innerHTML = '<p class="text-center text-on-surface-variant py-8">暂无数据</p>';
+                return;
+            }
+            list.innerHTML = items.map(t => {
+                const cat = categories[t.type].find(c => c.id === t.categoryId);
+                return `
+                    <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary">${cat?.icon || 'more_horiz'}</span>
+                            <div>
+                                <p class="font-body-md">${t.note}</p>
+                                <p class="text-xs text-on-surface-variant">${t.date}</p>
+                            </div>
+                        </div>
+                        <span class="font-label-numeric ${t.type === 'income' ? 'text-secondary' : 'text-primary'}">
+                            ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Close detail modal
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Date picker
+        function openDatePicker() {
+            document.getElementById('datePickerModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDatePicker() {
+            document.getElementById('datePickerModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function renderMonths() {
+            const grid = document.getElementById('monthGrid');
+            const months = [];
+            const now = new Date();
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push(date.toISOString().slice(0, 7));
+            }
+            grid.innerHTML = months.map(m => `
+                <button onclick="selectMonth('${m}')" class="p-3 rounded-lg text-center hover:bg-surface-container ${m === selectedMonth ? 'bg-primary text-on-primary' : 'bg-surface-container-low'}">
+                    ${m.replace('-', '年')}月
+                </button>
+            `).join('');
+        }
+
+        function selectMonth(month) {
+            selectedMonth = month;
+            closeDatePicker();
+            renderTransactions();
+            updateSummary();
+        }
+
+        // Helper functions
+        function formatCurrency(amount) {
+            return '¥' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function getDateLabel(dateStr) {
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            if (dateStr === today) return '今天';
+            if (dateStr === yesterday) return '昨天';
+            const date = new Date(dateStr);
+            return `${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
