@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>统计报表 - 记账本</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #F8FAFC; }
+        .type-tab.active { background: #000; color: #fff; }
+        .category-bar { transition: width 0.5s ease; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "secondary": "#006c49",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-border": "#E2E8F0",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#45464d",
+                        "income-glance": "#D1FAE5",
+                        "expense-glance": "#FFE4E6"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-numeric": ["JetBrains Mono"],
+                        "label-sm": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-numeric": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    },
+                    spacing: {
+                        "container-margin": "16px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "32px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface min-h-screen pb-24">
+    <header class="w-full sticky top-0 z-40 bg-surface">
+        <div class="flex justify-between items-center px-container-margin py-stack-md w-full max-w-[1200px] mx-auto">
+            <div class="flex items-center gap-stack-sm">
+                <span class="material-symbols-outlined text-primary">equalizer</span>
+                <h1 class="font-headline-md text-headline-md text-primary">统计报表</h1>
+            </div>
+            <button onclick="openDatePicker()" class="hover:bg-surface-container-low transition-colors p-2 rounded-full">
+                <span class="material-symbols-outlined text-on-surface-variant">calendar_month</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto px-container-margin space-y-stack-lg">
+        <!-- Month Selector -->
+        <section class="flex items-center justify-between mt-stack-md">
+            <button onclick="changeMonth(-1)" class="p-2 hover:bg-surface-container rounded-full">
+                <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <h2 class="font-headline-sm text-headline-sm text-primary" id="currentMonth">2024年3月</h2>
+            <button onclick="changeMonth(1)" class="p-2 hover:bg-surface-container rounded-full">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+        </section>
+
+        <!-- Summary Card -->
+        <section class="bg-surface-container-lowest border border-surface-border rounded-xl p-stack-lg shadow-sm">
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">收入</span>
+                    <p class="font-headline-md text-headline-md text-secondary font-label-numeric mt-1" id="summaryIncome">¥0.00</p>
+                </div>
+                <div>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">支出</span>
+                    <p class="font-headline-md text-headline-md text-primary font-label-numeric mt-1" id="summaryExpense">¥0.00</p>
+                </div>
+                <div>
+                    <span class="font-label-sm text-label-sm text-on-surface-variant">结余</span>
+                    <p class="font-headline-md text-headline-md font-label-numeric mt-1" id="summaryBalance">¥0.00</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Type Toggle -->
+        <section class="flex gap-2 bg-surface-container p-1 rounded-xl">
+            <button onclick="setType('expense')" id="tab-expense" class="type-tab active flex-1 py-2 rounded-lg font-medium text-center transition-colors">支出</button>
+            <button onclick="setType('income')" id="tab-income" class="type-tab flex-1 py-2 rounded-lg font-medium text-center transition-colors">收入</button>
+        </section>
+
+        <!-- Category Breakdown -->
+        <section class="bg-surface-container-lowest border border-surface-border rounded-xl p-stack-lg shadow-sm">
+            <h3 class="font-headline-sm text-headline-sm text-primary mb-stack-md">分类构成</h3>
+            <div id="categoryBreakdown" class="space-y-4">
+                <!-- Category bars will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Daily Trend -->
+        <section class="bg-surface-container-lowest border border-surface-border rounded-xl p-stack-lg shadow-sm">
+            <h3 class="font-headline-sm text-headline-sm text-primary mb-stack-md">每日趋势</h3>
+            <div id="dailyTrend" class="flex items-end gap-1 h-40">
+                <!-- Daily bars will be rendered here -->
+            </div>
+            <div class="flex justify-between mt-2">
+                <span class="text-xs text-on-surface-variant">1日</span>
+                <span class="text-xs text-on-surface-variant" id="lastDayLabel">31日</span>
+            </div>
+        </section>
+
+        <!-- Transaction List by Category -->
+        <section class="bg-surface-container-lowest border border-surface-border rounded-xl p-stack-lg shadow-sm">
+            <h3 class="font-headline-sm text-headline-sm text-primary mb-stack-md">分类明细</h3>
+            <div id="categoryDetail" class="space-y-3">
+                <!-- Category details will be rendered here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 w-full z-50 bg-surface-container-lowest border-t border-surface-border">
+        <div class="flex justify-around items-center h-16 w-full px-4 max-w-[1200px] mx-auto">
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="home.html">
+                <span class="material-symbols-outlined">home_storage</span>
+                <span class="font-label-sm text-label-sm">首页</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-primary font-semibold" href="stats.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">equalizer</span>
+                <span class="font-label-sm text-label-sm">统计</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="budget.html">
+                <span class="material-symbols-outlined">account_balance</span>
+                <span class="font-label-sm text-label-sm">预算</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="profile.html">
+                <span class="material-symbols-outlined">person</span>
+                <span class="font-label-sm text-label-sm">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Date Picker Modal -->
+    <div id="datePickerModal" class="hidden fixed inset-0 z-100 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" onclick="closeDatePicker()"></div>
+        <div class="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-headline-md text-headline-md text-primary">选择月份</h2>
+                <button onclick="closeDatePicker()" class="p-2 hover:bg-surface-container rounded-full">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-3" id="monthGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const categories = {
+            expense: [
+                { id: 'food', name: '餐饮', icon: 'restaurant', color: '#ef4444' },
+                { id: 'transport', name: '交通', icon: 'directions_car', color: '#f97316' },
+                { id: 'shopping', name: '购物', icon: 'shopping_bag', color: '#eab308' },
+                { id: 'housing', name: '居住', icon: 'house', color: '#22c55e' },
+                { id: 'entertainment', name: '娱乐', icon: 'movie', color: '#3b82f6' },
+                { id: 'medical', name: '医疗', icon: 'local_hospital', color: '#8b5cf6' },
+                { id: 'education', name: '教育', icon: 'school', color: '#ec4899' },
+                { id: 'social', name: '人情', icon: 'card_giftcard', color: '#14b8a6' },
+                { id: 'other-expense', name: '其他', icon: 'more_horiz', color: '#6b7280' }
+            ],
+            income: [
+                { id: 'salary', name: '工资', icon: 'payments', color: '#22c55e' },
+                { id: 'parttime', name: '兼职', icon: 'work', color: '#3b82f6' },
+                { id: 'investment', name: '理财', icon: 'trending_up', color: '#8b5cf6' },
+                { id: 'bonus', name: '红包', icon: 'redeem', color: '#ef4444' },
+                { id: 'other-income', name: '其他', icon: 'more_horiz', color: '#6b7280' }
+            ]
+        };
+
+        let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+        let currentType = 'expense';
+        let selectedMonth = new Date().toISOString().slice(0, 7);
+
+        function init() {
+            renderMonths();
+            updateStats();
+        }
+
+        function setType(type) {
+            currentType = type;
+            document.getElementById('tab-expense').classList.toggle('active', type === 'expense');
+            document.getElementById('tab-income').classList.toggle('active', type === 'income');
+            updateStats();
+        }
+
+        function changeMonth(delta) {
+            const [year, month] = selectedMonth.split('-').map(Number);
+            const date = new Date(year, month - 1 + delta, 1);
+            selectedMonth = date.toISOString().slice(0, 7);
+            document.getElementById('currentMonth').textContent = selectedMonth.replace('-', '年') + '月';
+            updateStats();
+        }
+
+        function updateStats() {
+            const monthTransactions = transactions.filter(t => t.date.startsWith(selectedMonth));
+            const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const balance = income - expense;
+
+            document.getElementById('summaryIncome').textContent = formatCurrency(income);
+            document.getElementById('summaryExpense').textContent = formatCurrency(expense);
+            document.getElementById('summaryBalance').textContent = formatCurrency(balance);
+            document.getElementById('summaryBalance').className = `font-headline-md text-headline-md font-label-numeric mt-1 ${balance >= 0 ? 'text-secondary' : 'text-primary'}`;
+            document.getElementById('currentMonth').textContent = selectedMonth.replace('-', '年') + '月';
+
+            renderCategoryBreakdown(monthTransactions);
+            renderDailyTrend(monthTransactions);
+            renderCategoryDetail(monthTransactions);
+        }
+
+        function renderCategoryBreakdown(monthTransactions) {
+            const typeTransactions = monthTransactions.filter(t => t.type === currentType);
+            const total = typeTransactions.reduce((sum, t) => sum + t.amount, 0);
+            const categoryTotals = {};
+
+            typeTransactions.forEach(t => {
+                if (!categoryTotals[t.categoryId]) categoryTotals[t.categoryId] = 0;
+                categoryTotals[t.categoryId] += t.amount;
+            });
+
+            const sorted = Object.entries(categoryTotals)
+                .sort(([, a], [, b]) => b - a)
+                .map(([id, amount]) => ({
+                    ...categories[currentType].find(c => c.id === id),
+                    amount,
+                    percentage: total > 0 ? (amount / total * 100) : 0
+                }));
+
+            const container = document.getElementById('categoryBreakdown');
+            if (sorted.length === 0) {
+                container.innerHTML = '<p class="text-center text-on-surface-variant py-4">暂无数据</p>';
+                return;
+            }
+
+            container.innerHTML = sorted.map(cat => `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center">
+                        <span class="material-symbols-outlined text-sm" style="color: ${cat.color}">${cat.icon}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium">${cat.name}</span>
+                            <span class="text-sm font-label-numeric">${formatCurrency(cat.amount)}</span>
+                        </div>
+                        <div class="h-2 bg-surface-container rounded-full overflow-hidden">
+                            <div class="category-bar h-full rounded-full" style="width: ${cat.percentage}%; background-color: ${cat.color}"></div>
+                        </div>
+                    </div>
+                    <span class="text-xs text-on-surface-variant w-12 text-right">${cat.percentage.toFixed(1)}%</span>
+                </div>
+            `).join('');
+        }
+
+        function renderDailyTrend(monthTransactions) {
+            const typeTransactions = monthTransactions.filter(t => t.type === currentType);
+            const [year, month] = selectedMonth.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const dailyTotals = {};
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                dailyTotals[i] = 0;
+            }
+
+            typeTransactions.forEach(t => {
+                const day = new Date(t.date).getDate();
+                dailyTotals[day] += t.amount;
+            });
+
+            const maxAmount = Math.max(...Object.values(dailyTotals), 1);
+            const container = document.getElementById('dailyTrend');
+
+            container.innerHTML = Object.entries(dailyTotals).map(([day, amount]) => {
+                const height = (amount / maxAmount * 100) || 2;
+                return `
+                    <div class="flex-1 flex flex-col items-center justify-end h-full">
+                        <div class="w-full bg-primary/10 rounded-t" style="height: ${height}%"></div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('lastDayLabel').textContent = daysInMonth + '日';
+        }
+
+        function renderCategoryDetail(monthTransactions) {
+            const typeTransactions = monthTransactions.filter(t => t.type === currentType);
+            const grouped = {};
+
+            typeTransactions.forEach(t => {
+                if (!grouped[t.categoryId]) grouped[t.categoryId] = [];
+                grouped[t.categoryId].push(t);
+            });
+
+            const container = document.getElementById('categoryDetail');
+            const sorted = Object.entries(grouped).sort(([, a], [, b]) => {
+                const sumA = a.reduce((s, t) => s + t.amount, 0);
+                const sumB = b.reduce((s, t) => s + t.amount, 0);
+                return sumB - sumA;
+            });
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<p class="text-center text-on-surface-variant py-4">暂无数据</p>';
+                return;
+            }
+
+            container.innerHTML = sorted.map(([catId, items]) => {
+                const cat = categories[currentType].find(c => c.id === catId);
+                const total = items.reduce((sum, t) => sum + t.amount, 0);
+                return `
+                    <div class="border border-surface-border rounded-lg overflow-hidden">
+                        <div class="flex items-center justify-between p-3 bg-surface-container-low">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined" style="color: ${cat?.color || '#6b7280'}">${cat?.icon || 'more_horiz'}</span>
+                                <span class="font-medium">${cat?.name || '未分类'}</span>
+                            </div>
+                            <span class="font-label-numeric">${formatCurrency(total)}</span>
+                        </div>
+                        <div class="divide-y divide-surface-border">
+                            ${items.map(t => `
+                                <div class="flex items-center justify-between px-3 py-2">
+                                    <div>
+                                        <p class="text-sm">${t.note}</p>
+                                        <p class="text-xs text-on-surface-variant">${t.date}</p>
+                                    </div>
+                                    <span class="text-sm font-label-numeric">${formatCurrency(t.amount)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openDatePicker() {
+            document.getElementById('datePickerModal').classList.remove('hidden');
+        }
+
+        function closeDatePicker() {
+            document.getElementById('datePickerModal').classList.add('hidden');
+        }
+
+        function renderMonths() {
+            const grid = document.getElementById('monthGrid');
+            const months = [];
+            const now = new Date();
+            for (let i = 0; i < 12; i++) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push(date.toISOString().slice(0, 7));
+            }
+            grid.innerHTML = months.map(m => `
+                <button onclick="selectMonth('${m}')" class="p-3 rounded-lg text-center hover:bg-surface-container ${m === selectedMonth ? 'bg-primary text-on-primary' : 'bg-surface-container-low'}">
+                    ${m.replace('-', '年')}月
+                </button>
+            `).join('');
+        }
+
+        function selectMonth(month) {
+            selectedMonth = month;
+            closeDatePicker();
+            updateStats();
+        }
+
+        function formatCurrency(amount) {
+            return '¥' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        init();
+    </script>
+</body>
+</html>
