@@ -1,0 +1,247 @@
+<!DOCTYPE html><html lang="zh-CN" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>记账本 - 登录注册</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ba1a1a",
+                    "primary-fixed-dim": "#bec6e0",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "on-surface": "#0b1c30",
+                    "on-primary-fixed": "#131b2e",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#c6c6cd",
+                    "surface-container-high": "#dce9ff",
+                    "primary-fixed": "#dae2fd",
+                    "tertiary-container": "#40000d",
+                    "income-glance": "#D1FAE5",
+                    "inverse-on-surface": "#eaf1ff",
+                    "secondary": "#006c49",
+                    "primary": "#000000",
+                    "surface-border": "#E2E8F0",
+                    "on-secondary-container": "#00714d",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-tertiary": "#ffffff",
+                    "background": "#f8f9ff",
+                    "surface-dim": "#cbdbf5",
+                    "surface": "#f8f9ff",
+                    "on-primary-container": "#7c839b",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-secondary-fixed": "#002113",
+                    "tertiary-fixed": "#ffdadb",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-tertiary-fixed-variant": "#92002a",
+                    "secondary-container": "#6cf8bb",
+                    "inverse-surface": "#213145",
+                    "inverse-primary": "#bec6e0",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "expense-glance": "#FFE4E6",
+                    "background-subtle": "#F8FAFC",
+                    "tertiary": "#000000",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "surface-tint": "#565e74",
+                    "surface-container": "#e5eeff",
+                    "primary-container": "#131b2e",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb2b7",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-container": "#f23d5c",
+                    "surface-container-low": "#eff4ff",
+                    "on-surface-variant": "#45464d",
+                    "surface-variant": "#d3e4fe",
+                    "on-tertiary-fixed": "#40000d",
+                    "on-background": "#0b1c30",
+                    "surface-bright": "#f8f9ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-sm": "8px",
+                    "gutter": "12px",
+                    "stack-lg": "32px",
+                    "container-margin": "16px",
+                    "unit": "4px",
+                    "stack-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "label-numeric": ["JetBrains Mono"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "display-lg-mobile": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "display-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-numeric": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg-mobile": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-tab {
+            color: #000000;
+            border-bottom: 2px solid #000000;
+        }
+        .form-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bg-mesh {
+            background-color: #f8f9ff;
+            background-image: radial-gradient(at 0% 0%, hsla(220,100%,95%,1) 0, transparent 50%), 
+                              radial-gradient(at 100% 100%, hsla(210,100%,90%,1) 0, transparent 50%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-mesh min-h-screen flex flex-col font-body-md text-on-surface selection:bg-surface-container-high">
+<!-- Auth Shell Suppression: TopAppBar & BottomNavBar are hidden for transactional screens -->
+<main class="flex-grow flex items-center justify-center px-container-margin py-stack-lg">
+<div class="w-full max-w-[400px] bg-surface-container-lowest p-8 rounded-xl border border-surface-border shadow-sm">
+<!-- Brand Section -->
+<div class="flex flex-col items-center mb-10">
+<div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mb-4 shadow-lg active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-on-primary text-4xl" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-primary tracking-tight">记账本</h1>
+<p class="font-body-md text-on-surface-variant mt-2 text-center">无需注册，点击即可开始记账</p>
+</div>
+<!-- Login Method Toggle -->
+
+<!-- Forms Container -->
+<div class="relative overflow-hidden">
+<!-- Phone Login Form -->
+
+<!-- Email Login Form (Hidden by default) -->
+
+</div>
+<!-- Action Buttons -->
+<div class="mt-10 space-y-stack-md">
+<a href="home.html" class="block w-full py-4 bg-primary text-on-primary font-headline-sm text-headline-sm rounded-xl hover:opacity-90 active:scale-[0.98] transition-all shadow-md text-center">一键开启</a>
+<div class="flex items-center gap-2">
+<input class="rounded border-surface-border text-primary focus:ring-primary" id="terms" type="checkbox">
+<label class="text-[12px] text-on-surface-variant leading-tight" for="terms">
+                        我已阅读并同意 <a class="text-primary hover:underline" href="#">《用户服务协议》</a> 和 <a class="text-primary hover:underline" href="#">《隐私保护政策》</a>
+</label>
+</div>
+</div>
+<!-- Divider -->
+<div class="relative my-10">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-surface-border"></div></div>
+<div class="relative flex justify-center text-label-sm"><span class="bg-surface-container-lowest px-4 text-on-surface-variant">其他方式登录</span></div>
+</div>
+<!-- Social Login -->
+<div class="grid grid-cols-2 gap-4 opacity-60">
+<button class="flex items-center justify-center gap-2 py-3 border border-surface-border rounded-lg hover:bg-background-subtle transition-colors group">
+<div class="w-5 h-5 bg-[#07C160] rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]" data-icon="chat_bubble" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface group-hover:text-primary">微信</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-3 border border-surface-border rounded-lg hover:bg-background-subtle transition-colors group">
+<div class="w-5 h-5 bg-[#1296db] rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]" data-icon="cloud" style="font-variation-settings: 'FILL' 1;">cloud</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface group-hover:text-primary">云备份登录</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Footer Identity -->
+<footer class="py-stack-md text-center">
+<p class="text-label-sm text-outline-variant">Powered by Clear Ledger Design System</p>
+</footer>
+<script>
+        function switchTab(type) {
+            const phoneTab = document.getElementById('tab-phone');
+            const emailTab = document.getElementById('tab-email');
+            const phoneForm = document.getElementById('form-phone');
+            const emailForm = document.getElementById('form-email');
+
+            if (type === 'phone') {
+                phoneTab.classList.add('active-tab');
+                phoneTab.classList.remove('text-on-surface-variant');
+                emailTab.classList.remove('active-tab');
+                emailTab.classList.add('text-on-surface-variant');
+
+                phoneForm.classList.replace('opacity-0', 'opacity-100');
+                phoneForm.classList.replace('-translate-x-full', 'translate-x-0');
+                phoneForm.classList.remove('absolute', 'pointer-events-none');
+
+                emailForm.classList.replace('opacity-100', 'opacity-0');
+                emailForm.classList.replace('translate-x-0', 'translate-x-full');
+                emailForm.classList.add('absolute', 'pointer-events-none');
+            } else {
+                emailTab.classList.add('active-tab');
+                emailTab.classList.remove('text-on-surface-variant');
+                phoneTab.classList.remove('active-tab');
+                phoneTab.classList.add('text-on-surface-variant');
+
+                emailForm.classList.replace('opacity-0', 'opacity-100');
+                emailForm.classList.replace('translate-x-full', 'translate-x-0');
+                emailForm.classList.remove('absolute', 'pointer-events-none');
+
+                phoneForm.classList.replace('opacity-100', 'opacity-0');
+                phoneForm.classList.replace('translate-x-0', '-translate-x-full');
+                phoneForm.classList.add('absolute', 'pointer-events-none');
+            }
+        }
+
+        // Countdown micro-interaction for Send Code
+        const sendBtn = document.getElementById('send-code-btn');
+        let isCounting = false;
+
+        sendBtn.addEventListener('click', () => {
+            if (isCounting) return;
+            
+            isCounting = true;
+            let seconds = 60;
+            sendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            const timer = setInterval(() => {
+                seconds--;
+                sendBtn.textContent = `${seconds}s 后重新获取`;
+                
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    isCounting = false;
+                    sendBtn.textContent = '获取验证码';
+                    sendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }, 1000);
+        });
+    </script>
+
+
+</body></html>
