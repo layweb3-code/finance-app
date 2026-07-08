@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>个人中心 - 记账本</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #F8FAFC; }
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; }
+        .modal.active { display: flex; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "secondary": "#006c49",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-border": "#E2E8F0",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#45464d",
+                        "income-glance": "#D1FAE5",
+                        "expense-glance": "#FFE4E6",
+                        "error": "#ba1a1a"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "label-numeric": ["JetBrains Mono"],
+                        "label-sm": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-numeric": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    },
+                    spacing: {
+                        "container-margin": "16px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "stack-lg": "32px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-body-md text-on-surface min-h-screen pb-24">
+    <header class="w-full sticky top-0 z-40 bg-surface">
+        <div class="flex items-center px-container-margin py-stack-md w-full max-w-[1200px] mx-auto">
+            <span class="material-symbols-outlined text-primary mr-2">person</span>
+            <h1 class="font-headline-md text-headline-md text-primary">个人中心</h1>
+        </div>
+    </header>
+
+    <main class="max-w-[1200px] mx-auto px-container-margin space-y-stack-lg">
+        <!-- User Info Card -->
+        <section class="mt-stack-md">
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl p-stack-lg shadow-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-on-primary text-3xl">person</span>
+                    </div>
+                    <div>
+                        <h2 class="font-headline-sm text-headline-sm text-primary" id="userName">用户</h2>
+                        <p class="text-label-sm text-on-surface-variant" id="userPhone">未绑定手机</p>
+                    </div>
+                    <button onclick="editProfile()" class="ml-auto p-2 hover:bg-surface-container rounded-full">
+                        <span class="material-symbols-outlined text-on-surface-variant">edit</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Overview -->
+        <section class="grid grid-cols-3 gap-3">
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl p-4 text-center">
+                <p class="font-label-sm text-label-sm text-on-surface-variant">总收入</p>
+                <p class="font-headline-sm text-headline-sm text-secondary font-label-numeric mt-1" id="totalIncome">¥0.00</p>
+            </div>
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl p-4 text-center">
+                <p class="font-label-sm text-label-sm text-on-surface-variant">总支出</p>
+                <p class="font-headline-sm text-headline-sm text-primary font-label-numeric mt-1" id="totalExpense">¥0.00</p>
+            </div>
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl p-4 text-center">
+                <p class="font-label-sm text-label-sm text-on-surface-variant">记账笔数</p>
+                <p class="font-headline-sm text-headline-sm text-primary font-label-numeric mt-1" id="totalCount">0</p>
+            </div>
+        </section>
+
+        <!-- Ledger Management -->
+        <section>
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl overflow-hidden shadow-sm">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border">
+                    <h3 class="font-headline-sm text-headline-sm text-primary">我的账本</h3>
+                    <button onclick="addLedger()" class="text-primary text-label-sm font-medium hover:underline flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        创建账本
+                    </button>
+                </div>
+                <div id="ledgerList" class="divide-y divide-surface-border">
+                    <!-- Ledgers will be rendered here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Category Management -->
+        <section>
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl overflow-hidden shadow-sm">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border">
+                    <h3 class="font-headline-sm text-headline-sm text-primary">分类管理</h3>
+                    <button onclick="addCategory()" class="text-primary text-label-sm font-medium hover:underline flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        添加分类
+                    </button>
+                </div>
+                <div class="px-4 py-3">
+                    <h4 class="text-label-sm text-on-surface-variant mb-2">支出分类</h4>
+                    <div class="flex flex-wrap gap-2 mb-4" id="expenseCategories"></div>
+                    <h4 class="text-label-sm text-on-surface-variant mb-2">收入分类</h4>
+                    <div class="flex flex-wrap gap-2" id="incomeCategories"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Export -->
+        <section>
+            <div class="bg-surface-container-lowest border border-surface-border rounded-xl overflow-hidden shadow-sm">
+                <button onclick="exportData()" class="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-container-low transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">download</span>
+                        <span class="font-body-md">导出数据</span>
+                    </div>
+                    <span class="text-label-sm text-on-surface-variant">CSV 格式</span>
+                </button>
+                <div class="border-t border-surface-border">
+                    <button onclick="clearData()" class="w-full flex items-center justify-between px-4 py-4 hover:bg-surface-container-low transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-error">delete_forever</span>
+                            <span class="font-body-md text-error">清除所有数据</span>
+                        </div>
+                        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- App Info -->
+        <section class="text-center text-label-sm text-on-surface-variant pb-8">
+            <p>记账本 v1.0</p>
+            <p class="mt-1">简单 · 快速 · 好看 · 可共享</p>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 w-full z-50 bg-surface-container-lowest border-t border-surface-border">
+        <div class="flex justify-around items-center h-16 w-full px-4 max-w-[1200px] mx-auto">
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="home.html">
+                <span class="material-symbols-outlined">home_storage</span>
+                <span class="font-label-sm text-label-sm">首页</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="stats.html">
+                <span class="material-symbols-outlined">equalizer</span>
+                <span class="font-label-sm text-label-sm">统计</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-on-surface-variant hover:opacity-80" href="budget.html">
+                <span class="material-symbols-outlined">account_balance</span>
+                <span class="font-label-sm text-label-sm">预算</span>
+            </a>
+            <a class="flex flex-col items-center justify-center text-primary font-semibold" href="profile.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+                <span class="font-label-sm text-label-sm">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" onclick="closeEditProfileModal()"></div>
+        <div class="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="font-headline-md text-headline-md text-primary mb-4">编辑个人信息</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">昵称</label>
+                    <input type="text" id="editName" class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary">
+                </div>
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">手机号</label>
+                    <input type="tel" id="editPhone" class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary">
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditProfileModal()" class="flex-1 py-3 border border-surface-border rounded-xl hover:bg-surface-container">取消</button>
+                <button onclick="saveProfile()" class="flex-1 py-3 bg-primary text-on-primary rounded-xl hover:opacity-90">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="addCategoryModal" class="modal items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" onclick="closeAddCategoryModal()"></div>
+        <div class="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="font-headline-md text-headline-md text-primary mb-4">添加分类</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">分类类型</label>
+                    <select id="newCategoryType" class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary">
+                        <option value="expense">支出</option>
+                        <option value="income">收入</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">分类名称</label>
+                    <input type="text" id="newCategoryName" class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary" placeholder="例如：宠物">
+                </div>
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">图标</label>
+                    <div class="flex flex-wrap gap-2" id="iconSelector"></div>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeAddCategoryModal()" class="flex-1 py-3 border border-surface-border rounded-xl hover:bg-surface-container">取消</button>
+                <button onclick="saveNewCategory()" class="flex-1 py-3 bg-primary text-on-primary rounded-xl hover:opacity-90">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Ledger Modal -->
+    <div id="addLedgerModal" class="modal items-center justify-center">
+        <div class="absolute inset-0 bg-black/50" onclick="closeAddLedgerModal()"></div>
+        <div class="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+            <h3 class="font-headline-md text-headline-md text-primary mb-4">创建账本</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">账本名称</label>
+                    <input type="text" id="newLedgerName" class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary" placeholder="例如：家庭账本">
+                </div>
+                <div>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">账本类型</label>
+                    <select id="newLedgerType" class="w-full px-4 py-3 border border-surface-border rounded-xl focus:outline-none focus:border-primary">
+                        <option value="personal">个人</option>
+                        <option value="family">家庭</option>
+                        <option value="business">经营</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeAddLedgerModal()" class="flex-1 py-3 border border-surface-border rounded-xl hover:bg-surface-container">取消</button>
+                <button onclick="saveNewLedger()" class="flex-1 py-3 bg-primary text-on-primary rounded-xl hover:opacity-90">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaultCategories = {
+            expense: [
+                { id: 'food', name: '餐饮', icon: 'restaurant' },
+                { id: 'transport', name: '交通', icon: 'directions_car' },
+                { id: 'shopping', name: '购物', icon: 'shopping_bag' },
+                { id: 'housing', name: '居住', icon: 'house' },
+                { id: 'entertainment', name: '娱乐', icon: 'movie' },
+                { id: 'medical', name: '医疗', icon: 'local_hospital' },
+                { id: 'education', name: '教育', icon: 'school' },
+                { id: 'social', name: '人情', icon: 'card_giftcard' }
+            ],
+            income: [
+                { id: 'salary', name: '工资', icon: 'payments' },
+                { id: 'parttime', name: '兼职', icon: 'work' },
+                { id: 'investment', name: '理财', icon: 'trending_up' },
+                { id: 'bonus', name: '红包', icon: 'redeem' }
+            ]
+        };
+
+        const availableIcons = [
+            'pets', 'sports_esports', 'fitness_center', 'local_cafe', 'shopping_cart',
+            'flight', 'hotel', 'music_note', 'photo_camera', 'brush', 'code', 'build'
+        ];
+
+        let user = JSON.parse(localStorage.getItem('user') || '{"name":"用户","phone":""}');
+        let categories = JSON.parse(localStorage.getItem('categories') || JSON.stringify(defaultCategories));
+        let ledgers = JSON.parse(localStorage.getItem('ledgers') || '[{"id":"default","name":"个人账本","type":"personal"}]');
+        let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+        let selectedIcon = 'pets';
+
+        function init() {
+            updateStats();
+            renderLedgers();
+            renderCategories();
+            renderIconSelector();
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userPhone').textContent = user.phone || '未绑定手机';
+        }
+
+        function updateStats() {
+            const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('totalIncome').textContent = formatCurrency(income);
+            document.getElementById('totalExpense').textContent = formatCurrency(expense);
+            document.getElementById('totalCount').textContent = transactions.length;
+        }
+
+        function renderLedgers() {
+            const container = document.getElementById('ledgerList');
+            const typeLabels = { personal: '个人', family: '家庭', business: '经营' };
+            container.innerHTML = ledgers.map(ledger => `
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary">${ledger.type === 'personal' ? 'person' : ledger.type === 'family' ? 'family_restroom' : 'business'}</span>
+                        <div>
+                            <p class="font-body-md">${ledger.name}</p>
+                            <p class="text-label-sm text-on-surface-variant">${typeLabels[ledger.type] || '个人'}</p>
+                        </div>
+                    </div>
+                    ${ledger.id !== 'default' ? `
+                        <button onclick="deleteLedger('${ledger.id}')" class="p-2 hover:bg-surface-container rounded-full">
+                            <span class="material-symbols-outlined text-error text-lg">delete</span>
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderCategories() {
+            const expenseContainer = document.getElementById('expenseCategories');
+            const incomeContainer = document.getElementById('incomeCategories');
+
+            expenseContainer.innerHTML = categories.expense.map(cat => `
+                <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-container rounded-full text-sm">
+                    <span class="material-symbols-outlined text-sm">${cat.icon}</span>
+                    ${cat.name}
+                    <button onclick="deleteCategory('expense', '${cat.id}')" class="ml-1 hover:text-error">×</button>
+                </span>
+            `).join('');
+
+            incomeContainer.innerHTML = categories.income.map(cat => `
+                <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-surface-container rounded-full text-sm">
+                    <span class="material-symbols-outlined text-sm">${cat.icon}</span>
+                    ${cat.name}
+                    <button onclick="deleteCategory('income', '${cat.id}')" class="ml-1 hover:text-error">×</button>
+                </span>
+            `).join('');
+        }
+
+        function renderIconSelector() {
+            const container = document.getElementById('iconSelector');
+            container.innerHTML = availableIcons.map(icon => `
+                <button onclick="selectIcon('${icon}')" class="p-2 rounded-lg hover:bg-surface-container ${icon === selectedIcon ? 'bg-primary text-on-primary' : ''}">
+                    <span class="material-symbols-outlined">${icon}</span>
+                </button>
+            `).join('');
+        }
+
+        function selectIcon(icon) {
+            selectedIcon = icon;
+            renderIconSelector();
+        }
+
+        // Profile
+        function editProfile() {
+            document.getElementById('editName').value = user.name;
+            document.getElementById('editPhone').value = user.phone || '';
+            document.getElementById('editProfileModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function saveProfile() {
+            user.name = document.getElementById('editName').value || '用户';
+            user.phone = document.getElementById('editPhone').value;
+            localStorage.setItem('user', JSON.stringify(user));
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userPhone').textContent = user.phone || '未绑定手机';
+            closeEditProfileModal();
+        }
+
+        // Categories
+        function addCategory() {
+            document.getElementById('newCategoryName').value = '';
+            document.getElementById('addCategoryModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddCategoryModal() {
+            document.getElementById('addCategoryModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function saveNewCategory() {
+            const type = document.getElementById('newCategoryType').value;
+            const name = document.getElementById('newCategoryName').value.trim();
+            if (!name) {
+                alert('请输入分类名称');
+                return;
+            }
+            const id = name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
+            categories[type].push({ id, name, icon: selectedIcon });
+            localStorage.setItem('categories', JSON.stringify(categories));
+            renderCategories();
+            closeAddCategoryModal();
+        }
+
+        function deleteCategory(type, id) {
+            if (confirm('确定要删除这个分类吗？')) {
+                categories[type] = categories[type].filter(c => c.id !== id);
+                localStorage.setItem('categories', JSON.stringify(categories));
+                renderCategories();
+            }
+        }
+
+        // Ledgers
+        function addLedger() {
+            document.getElementById('newLedgerName').value = '';
+            document.getElementById('addLedgerModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddLedgerModal() {
+            document.getElementById('addLedgerModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function saveNewLedger() {
+            const name = document.getElementById('newLedgerName').value.trim();
+            const type = document.getElementById('newLedgerType').value;
+            if (!name) {
+                alert('请输入账本名称');
+                return;
+            }
+            ledgers.push({ id: 'ledger-' + Date.now(), name, type });
+            localStorage.setItem('ledgers', JSON.stringify(ledgers));
+            renderLedgers();
+            closeAddLedgerModal();
+        }
+
+        function deleteLedger(id) {
+            if (confirm('确定要删除这个账本吗？')) {
+                ledgers = ledgers.filter(l => l.id !== id);
+                localStorage.setItem('ledgers', JSON.stringify(ledgers));
+                renderLedgers();
+            }
+        }
+
+        // Export
+        function exportData() {
+            if (transactions.length === 0) {
+                alert('暂无数据可导出');
+                return;
+            }
+
+            const headers = ['日期', '类型', '分类', '金额', '备注'];
+            const rows = transactions.map(t => {
+                const cat = categories[t.type].find(c => c.id === t.categoryId);
+                return [t.date, t.type === 'income' ? '收入' : '支出', cat?.name || '未分类', t.amount, t.note].join(',');
+            });
+
+            const csv = '﻿' + headers.join(',') + '\n' + rows.join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `记账本_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Clear Data
+        function clearData() {
+            if (confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+                if (confirm('再次确认：清除后所有记账数据将永久丢失！')) {
+                    localStorage.clear();
+                    transactions = [];
+                    categories = JSON.parse(JSON.stringify(defaultCategories));
+                    ledgers = [{ id: 'default', name: '个人账本', type: 'personal' }];
+                    user = { name: '用户', phone: '' };
+                    init();
+                    alert('数据已清除');
+                }
+            }
+        }
+
+        function formatCurrency(amount) {
+            return '¥' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        init();
+    </script>
+</body>
+</html>
